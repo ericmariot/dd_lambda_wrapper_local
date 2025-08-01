@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:latest
+    container_name: datadog-agent
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_SITE=${DD_SITE}
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  lambda-function:
+    build: .
+    container_name: dd_lambda_wrapper_local
+    ports:
+      - "9000:8080"
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_SITE=${DD_SITE}
+      - DD_SERVICE=dd_lambda_wrapper_local
+      - DD_ENV=local-dev
+      - DD_SERVERLESS_FLUSH_STRATEGY=periodically,100
+    depends_on:
+      - datadog-agent
